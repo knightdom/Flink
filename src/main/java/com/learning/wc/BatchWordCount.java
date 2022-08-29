@@ -12,8 +12,8 @@ import org.apache.flink.util.Collector;
 /**
  * Created by Flink - BatchWordCount
  *
- * @Author: Edgar Fang
- * @Date: 2022/8/25 16:02
+ * @author Edgar Fang
+ * @date 2022/8/25 16:02
  */
 public class BatchWordCount {
     public static void main(String[] args) throws Exception {
