@@ -1,0 +1,28 @@
+version: '3'
+
+services:
+  FlinkJobManager:
+    image: flink:1.15.1-scala_2.12-java8
+    container_name: FlinkJobManager
+    hostname: FlinkJobManager
+    expose:
+      - '6123'
+    ports:
+      - '8082:8081'
+    command: jobmanager
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: FlinkJobManager
+
+  FlinkTaskManager:
+    image: flink:1.15.1-scala_2.12-java8
+    container_name: FlinkTaskManager
+    hostname: FlinkTaskManager
+    expose:
+      - '6121'
+      - '6122'
+    depends_on:
+      - FlinkJobManager
+    command: taskmanager
+    scale: 2
