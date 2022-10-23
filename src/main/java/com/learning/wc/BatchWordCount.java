@@ -32,12 +32,13 @@ public class BatchWordCount {
                 out.collect(Tuple2.of(word, 1L));
             }
         })
+                // 类型声明
                 .returns(Types.TUPLE(Types.STRING, Types.LONG));
 
-        // 4 按照word进行分组
+        // 4 按照word进行分组（根据二元组中的索引为0的数据进行分组）
         UnsortedGrouping<Tuple2<String, Long>> wordAndOneGroup = wordAndOneTuple.groupBy(0);
 
-        // 5 分组内进行聚合统计
+        // 5 分组内进行聚合统计（根据二元组中的索引为1的数据进行聚合统计）
         AggregateOperator<Tuple2<String, Long>> sum = wordAndOneGroup.sum(1);
 
         // 6 dayin结果
