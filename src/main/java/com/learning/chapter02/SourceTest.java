@@ -36,7 +36,7 @@ public class SourceTest {
         DataStreamSource<Event> stream3 = env.fromElements(
                 new Event("Mary", "./home", 1000L),
                 new Event("Bob", "./cart", 2000L)
-        )
+        );
 
         stream1.print("1");
         numStream.print("nums");

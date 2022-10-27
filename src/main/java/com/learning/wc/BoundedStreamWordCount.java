@@ -20,7 +20,7 @@ public class BoundedStreamWordCount {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
         // 2 读取文件
-        DataStreamSource<String> lineDataStreamSource = env.readTextFile("/input/words.txt");
+        DataStreamSource<String> lineDataStreamSource = env.readTextFile("input/words.txt");
 
         // 3 转换计算（和批处理一样）
         SingleOutputStreamOperator<Tuple2<String, Long>> wordAndOneTuple = lineDataStreamSource.flatMap((String line, Collector<Tuple2<String, Long>> out) -> {
@@ -31,7 +31,7 @@ public class BoundedStreamWordCount {
         })
                 .returns(Types.TUPLE(Types.STRING, Types.LONG));
 
-        // 4 分组
+        // 4 分组 在二元组中，f0表示第一个元素，f1表示第二个元素。以data中的第一个元素为key
         KeyedStream<Tuple2<String, Long>, String> wordAndOneKeyedStream = wordAndOneTuple.keyBy(data -> data.f0);   // keyBy()建议添加KeySelector，因此用一个lambda表达式获取
 
         // 5 求和

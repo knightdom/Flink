@@ -2,32 +2,42 @@ version: '3'
 
 services:
   FlinkJobManager:
-    image: flink:1.15.1-scala_2.12-java8
-#    container_name: FlinkJobManager
-    hostname: FlinkJobManager
+    image: kinghtdom/hadoop3.3-flink1.15
+    container_name: FlinkJobManager
+    hostname: master
     expose:
       - '6123'
+      - '9000'
+      - '22'
     ports:
-      - '8082:8081'
+      - '8081:8081' # Flink的WEB UI接口
+      - '8088:8088' # Hadoop.Yarn的WEB UI接口
+      - '8042:8042' # Hadoop.NodeManager的http服务端口
+      - '9870:9870' # Hadoop.NameNode的http服务端口
+      - '19888:19888' # Hadoop.jobhistory WEB UI接口
+      - '8022:22' # ssh接口
     command: jobmanager
     environment:
       - |
         FLINK_PROPERTIES=
         jobmanager.rpc.address: FlinkJobManager
     volumes:
-      - ../input:/input
+      - ..:/www
+    networks:
+      bigdata:
+        ipv4_address: 172.18.0.2
 
-  FlinkTaskManager:
-    image: flink:1.15.1-scala_2.12-java8
-#    container_name: FlinkTaskManager
-    hostname: FlinkTaskManager
+  FlinkTaskManager-1:
+    image: kinghtdom/hadoop3.3-flink1.15
+    container_name: FlinkTaskManager1
+    hostname: worker1
     expose:
       - '6121'
       - '6122'
+      - '22'
     depends_on:
       - FlinkJobManager
     command: taskmanager
-    scale: 2
     links:
       - 'FlinkJobManager:jobmanager'
     environment:
@@ -36,4 +46,38 @@ services:
         jobmanager.rpc.address: FlinkJobManager
         taskmanager.numberOfTaskSlots: 2
     volumes:
-      - ../input:/input
+      - ..:/www
+    networks:
+      bigdata:
+        ipv4_address: 172.18.0.3
+
+  FlinkTaskManager-2:
+    image: kinghtdom/hadoop3.3-flink1.15
+    container_name: FlinkTaskManager2
+    hostname: worker2
+    expose:
+      - '6121'
+      - '6122'
+      - '22'
+    depends_on:
+      - FlinkJobManager
+    command: taskmanager
+    links:
+      - 'FlinkJobManager:jobmanager'
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: FlinkJobManager
+        taskmanager.numberOfTaskSlots: 2
+    volumes:
+      - ..:/www
+    networks:
+      bigdata:
+        ipv4_address: 172.18.0.4
+
+networks:
+  bigdata:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16

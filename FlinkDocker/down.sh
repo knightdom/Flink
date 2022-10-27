@@ -6,6 +6,7 @@ then
     mkdir /var/log/nginx
 fi
 
-docker stop flinkdocker_FlinkTaskManager_1 flinkdocker_FlinkTaskManager_2 flinkdocker_FlinkJobManager_1
-docker rm flinkdocker_FlinkTaskManager_1 flinkdocker_FlinkTaskManager_2 flinkdocker_FlinkJobManager_1
+docker stop FlinkTaskManager1 FlinkTaskManager2 FlinkJobManager
+docker rm FlinkTaskManager1 FlinkTaskManager2 FlinkJobManager
+docker build -t kinghtdom/hadoop3.3-flink1.15 .
 docker-compose up -d
