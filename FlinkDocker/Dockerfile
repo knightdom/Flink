@@ -12,7 +12,7 @@ ENV PATH="$HADOOP_HOME/hadoop/sbin:$HADOOP_HOME/bin:$PATH"
 WORKDIR /opt
 
 RUN sed -i s@/deb.debian.org@/mirrors.aliyun.com/@g /etc/apt/sources.list
-RUN apt-get clean && apt-get update && apt-get install -y openssh-server vim net-tools inetutils-ping lsof
+RUN apt-get clean && apt-get update && apt-get install -y openssh-server vim net-tools inetutils-ping lsof netcat
 
 RUN ssh-keygen -t rsa -f /root/.ssh/id_rsa -P '' && \
     cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys

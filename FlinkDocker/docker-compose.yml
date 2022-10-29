@@ -15,12 +15,11 @@ services:
       - '8042:8042' # Hadoop.NodeManager的http服务端口
       - '9870:9870' # Hadoop.NameNode的http服务端口
       - '19888:19888' # Hadoop.jobhistory WEB UI接口
-      - '8022:22' # ssh接口
     command: jobmanager
     environment:
       - |
         FLINK_PROPERTIES=
-        jobmanager.rpc.address: FlinkJobManager
+        jobmanager.rpc.address: master
     volumes:
       - ..:/www
     networks:
@@ -43,7 +42,7 @@ services:
     environment:
       - |
         FLINK_PROPERTIES=
-        jobmanager.rpc.address: FlinkJobManager
+        jobmanager.rpc.address: master
         taskmanager.numberOfTaskSlots: 2
     volumes:
       - ..:/www
@@ -67,7 +66,7 @@ services:
     environment:
       - |
         FLINK_PROPERTIES=
-        jobmanager.rpc.address: FlinkJobManager
+        jobmanager.rpc.address: master
         taskmanager.numberOfTaskSlots: 2
     volumes:
       - ..:/www
