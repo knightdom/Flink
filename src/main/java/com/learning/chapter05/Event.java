@@ -1,4 +1,4 @@
-package com.learning.chapter02;
+package com.learning.chapter05;
 
 import java.sql.Timestamp;
 

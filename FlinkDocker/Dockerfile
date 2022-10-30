@@ -1,6 +1,6 @@
-FROM docker.io/flink:1.15.1-scala_2.12-java8
+FROM docker.io/flink:1.16.0-scala_2.12-java8
 LABEL maintainer="Edgar <kinghtdom@gmail.com>"
-LABEL description="Docker image with Flink (1.15) and Hadoop (3.3), based on flink:1.15.1-scala_2.12-java8"
+LABEL description="Docker image with Flink (1.15) and Hadoop (3.3), based on flink:1.16.0-scala_2.12-java8"
 
 USER root
 
@@ -12,7 +12,7 @@ ENV PATH="$HADOOP_HOME/hadoop/sbin:$HADOOP_HOME/bin:$PATH"
 WORKDIR /opt
 
 RUN sed -i s@/deb.debian.org@/mirrors.aliyun.com/@g /etc/apt/sources.list
-RUN apt-get clean && apt-get update && apt-get install -y openssh-server vim net-tools inetutils-ping lsof netcat
+RUN apt-get clean && apt-get update && apt-get install -y openssh-server vim net-tools inetutils-ping lsof netcat openjdk-8-jdk
 
 RUN ssh-keygen -t rsa -f /root/.ssh/id_rsa -P '' && \
     cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
@@ -43,7 +43,7 @@ RUN chmod +x /opt/start-hadoop.sh && \
     chmod +x $HADOOP_HOME/sbin/start-dfs.sh && \
     chmod +x $HADOOP_HOME/sbin/start-yarn.sh
 
-RUN hdfs namenode -format
+#RUN hdfs namenode -format
 
 #RUN sed -i '$a\if [ -f /root/script/autoservice.sh ]; then ' /root/.bashrc && \
 #    sed -i '$a\     . /root/script/autoservice.sh' /root/.bashrc && \

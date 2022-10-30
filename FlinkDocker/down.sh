@@ -6,7 +6,7 @@ then
     mkdir /var/log/nginx
 fi
 
-docker stop FlinkTaskManager1 FlinkTaskManager2 FlinkJobManager
-docker rm FlinkTaskManager1 FlinkTaskManager2 FlinkJobManager
+docker stop FlinkTaskManager1 FlinkTaskManager2 FlinkJobManager ZooKeeper Kafka
+docker rm FlinkTaskManager1 FlinkTaskManager2 FlinkJobManager ZooKeeper Kafka
 docker build -t kinghtdom/hadoop3.3-flink1.15 .
 docker-compose up -d

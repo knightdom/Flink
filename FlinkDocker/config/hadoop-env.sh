@@ -428,7 +428,7 @@
 #
 # For example, to limit who can execute the namenode command,
 # export HDFS_NAMENODE_USER=hdfs
-export JAVA_HOME=/usr/local/openjdk-8
+export JAVA_HOME=/opt/java/openjdk
 export HADOOP_HOME=/opt/hadoop
 export HADOOP_MAPRED_HOME=/opt/hadoop
 export HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
