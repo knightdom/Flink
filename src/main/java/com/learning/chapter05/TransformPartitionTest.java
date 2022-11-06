@@ -1,5 +1,7 @@
 package com.learning.chapter05;
 
+import org.apache.flink.api.common.functions.Partitioner;
+import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.source.RichParallelSourceFunction;
@@ -34,22 +36,22 @@ public class TransformPartitionTest {
         // 如果是rebalance的话，a1会将数据按顺序分配给b1，b2，b3，b4
         // 如果是rescale，a1会将数据分配给b1和b2，a2会将数据分配给b3，b4
         // 3.1 获取数据
-        DataStreamSource<Integer> stream1 = env.addSource(new RichParallelSourceFunction<Integer>() {
-
-            @Override
-            public void run(SourceContext<Integer> sourceContext) throws Exception {
-                for (int i = 0; i < 8; i++) {
-                    // 将奇偶数分别发送到0号和1号的并行分区中
-                    if (i % 2 == getRuntimeContext().getIndexOfThisSubtask())
-                        sourceContext.collect(i);
-                }
-            }
-
-            @Override
-            public void cancel() {
-
-            }
-        }).setParallelism(2);
+//        DataStreamSource<Integer> stream1 = env.addSource(new RichParallelSourceFunction<Integer>() {
+//
+//            @Override
+//            public void run(SourceContext<Integer> sourceContext) throws Exception {
+//                for (int i = 0; i < 8; i++) {
+//                    // 将奇偶数分别发送到0号和1号的并行分区中
+//                    if (i % 2 == getRuntimeContext().getIndexOfThisSubtask())
+//                        sourceContext.collect(i);
+//                }
+//            }
+//
+//            @Override
+//            public void cancel() {
+//
+//            }
+//        }).setParallelism(2);
 
 //        stream1.rescale().print().setParallelism(4);
         /*
@@ -71,7 +73,19 @@ public class TransformPartitionTest {
 //        stream.global().print().setParallelism(4);
 
         // 6. 自定义重分区
-        
+        env.fromElements(1,2,3,4,5,6,7,8)
+                .partitionCustom(new Partitioner<Integer>() {
+
+                    @Override
+                    public int partition(Integer key, int numPartitions) {
+                        return key % 2;
+                    }
+                }, new KeySelector<Integer, Integer>() {
+                    @Override
+                    public Integer getKey(Integer value) throws Exception {
+                        return value;
+                    }
+                }).print().setParallelism(4);
 
         env.execute();
     }

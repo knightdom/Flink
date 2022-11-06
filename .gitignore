@@ -1,3 +1,4 @@
 .idea
 target
 FlinkDocker/config/hadoop-3.3.4.tar.gz
+output
