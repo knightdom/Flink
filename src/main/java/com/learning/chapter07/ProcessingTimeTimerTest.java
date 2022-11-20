@@ -1,4 +1,4 @@
-package com.learning.chapter06;
+package com.learning.chapter07;
 
 import com.learning.chapter05.ClickSource;
 import com.learning.chapter05.Event;
