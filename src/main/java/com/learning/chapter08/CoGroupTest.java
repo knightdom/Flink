@@ -2,22 +2,24 @@ package com.learning.chapter08;
 
 import org.apache.flink.api.common.eventtime.SerializableTimestampAssigner;
 import org.apache.flink.api.common.eventtime.WatermarkStrategy;
+import org.apache.flink.api.common.functions.CoGroupFunction;
 import org.apache.flink.api.common.functions.JoinFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
+import org.apache.flink.util.Collector;
 
 import java.time.Duration;
 
 /**
- * Created by Flink - WindowJoinTest
+ * Created by Flink - CoGroupTest
  *
  * @Author: Edgar Fang
  * @Date: 2022/11/28 22:45
  */
-public class WindowJoinTest {
+public class CoGroupTest {
     public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(1);
@@ -48,15 +50,16 @@ public class WindowJoinTest {
                     }
                 }));
 
-        // 类似sql中的inner join
-        stream1.join(stream2)
+        // 类似sql中的inner/left/right/full join
+        // window join的底层其实就是coGroup
+        stream1.coGroup(stream2)
                 .where(data -> data.f0)
                 .equalTo(data -> data.f0)
                 .window(TumblingEventTimeWindows.of(Time.seconds(5)))
-                .apply(new JoinFunction<Tuple2<String, Long>, Tuple2<String, Integer>, String>() {
+                .apply(new CoGroupFunction<Tuple2<String, Long>, Tuple2<String, Integer>, String>() {
                     @Override
-                    public String join(Tuple2<String, Long> first, Tuple2<String, Integer> second) throws Exception {
-                        return first + " -> " + second;
+                    public void coGroup(Iterable<Tuple2<String, Long>> first, Iterable<Tuple2<String, Integer>> second, Collector<String> out) throws Exception {
+                        out.collect(first + " => " + second);
                     }
                 }).print();
 
