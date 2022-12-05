@@ -8,6 +8,7 @@ import org.apache.flink.api.common.functions.AggregateFunction;
 import org.apache.flink.api.common.functions.ReduceFunction;
 import org.apache.flink.api.common.functions.RichFlatMapFunction;
 import org.apache.flink.api.common.state.*;
+import org.apache.flink.api.common.time.Time;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -52,7 +53,8 @@ public class StateTest {
 
         @Override
         public void open(Configuration parameters) throws Exception {
-            myValueState = getRuntimeContext().getState(new ValueStateDescriptor<Event>("my-state", Event.class));
+            ValueStateDescriptor<Event> eventValueStateDescriptor = new ValueStateDescriptor<>("my-state", Event.class);
+            myValueState = getRuntimeContext().getState(eventValueStateDescriptor);
             myListState = getRuntimeContext().getListState(new ListStateDescriptor<Event>("my-list", Event.class));
             myMapState = getRuntimeContext().getMapState(new MapStateDescriptor<String, Long>("my-map", String.class, Long.class));
 
@@ -87,6 +89,14 @@ public class StateTest {
                         }
                     }
                     , Long.class));
+
+            // 配置状态的TTL
+            StateTtlConfig ttlConfig = StateTtlConfig.newBuilder(Time.hours(1)) // 创建时设置ttl时间 当前的1小时是process time，即处理时间，不能是事件时间
+                    .setUpdateType(StateTtlConfig.UpdateType.OnReadAndWrite)    // 设置什么时候更新ttl时间
+                    .setStateVisibility(StateTtlConfig.StateVisibility.ReturnExpiredIfNotCleanedUp) // 设置过期未清除的状态是否可使用
+                    .build();
+
+            eventValueStateDescriptor.enableTimeToLive(ttlConfig);
         }
 
         @Override
