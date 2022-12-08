@@ -9,8 +9,11 @@ import org.apache.flink.api.common.state.ListStateDescriptor;
 import org.apache.flink.contrib.streaming.state.EmbeddedRocksDBStateBackend;
 import org.apache.flink.runtime.state.FunctionInitializationContext;
 import org.apache.flink.runtime.state.FunctionSnapshotContext;
+import org.apache.flink.runtime.state.storage.FileSystemCheckpointStorage;
+import org.apache.flink.streaming.api.CheckpointingMode;
 import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
 import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
+import org.apache.flink.streaming.api.environment.CheckpointConfig;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 
@@ -30,8 +33,15 @@ public class BufferingSinkExample {
         env.setParallelism(1);
 
         // 设置检查点
-        env.enableCheckpointing(1000L); //每10s设置检查点
+        env.enableCheckpointing(1000L); //每1s设置检查点，每1秒触发一次
         env.setStateBackend(new EmbeddedRocksDBStateBackend());  // 设置检查点保存到RockDB中，即保存到硬盘
+//        env.getCheckpointConfig().setCheckpointStorage(new FileSystemCheckpointStorage(""));    // 一般不直接在程序中配置，而是在配置文件中统一配置
+
+        CheckpointConfig checkpointConfig = env.getCheckpointConfig();
+        checkpointConfig.setCheckpointTimeout(60000L);  // 超过1分钟的话，抛弃该检查点
+        checkpointConfig.setCheckpointingMode(CheckpointingMode.AT_LEAST_ONCE);     // 模式有两种：至少一次，精确一次
+        checkpointConfig.setMinPauseBetweenCheckpoints(500L);   // 第一个检查点的结束和第二个检查点的开始的时间间隔不得小于500ms
+        checkpointConfig.setMaxConcurrentCheckpoints(1);    // 同时执行的检查点的个数，如果前一个执行时间太久，可能1s后还没完成，是否能生成第二个检查点
 
         SingleOutputStreamOperator<Event> stream = env.addSource(new ClickSource())
                 .assignTimestampsAndWatermarks(WatermarkStrategy.<Event>forBoundedOutOfOrderness(Duration.ZERO)
