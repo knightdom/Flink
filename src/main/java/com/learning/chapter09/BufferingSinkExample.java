@@ -33,7 +33,6 @@ public class BufferingSinkExample {
         env.enableCheckpointing(1000L); //每10s设置检查点
         env.setStateBackend(new EmbeddedRocksDBStateBackend());  // 设置检查点保存到RockDB中，即保存到硬盘
 
-
         SingleOutputStreamOperator<Event> stream = env.addSource(new ClickSource())
                 .assignTimestampsAndWatermarks(WatermarkStrategy.<Event>forBoundedOutOfOrderness(Duration.ZERO)
                         .withTimestampAssigner(new SerializableTimestampAssigner<Event>() {
