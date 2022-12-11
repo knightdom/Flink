@@ -42,6 +42,9 @@ public class BufferingSinkExample {
         checkpointConfig.setCheckpointingMode(CheckpointingMode.AT_LEAST_ONCE);     // 模式有两种：至少一次，精确一次
         checkpointConfig.setMinPauseBetweenCheckpoints(500L);   // 第一个检查点的结束和第二个检查点的开始的时间间隔不得小于500ms
         checkpointConfig.setMaxConcurrentCheckpoints(1);    // 同时执行的检查点的个数，如果前一个执行时间太久，可能1s后还没完成，是否能生成第二个检查点
+        checkpointConfig.enableUnalignedCheckpoints();  // 开启未对齐的检查点保存，即每个节点获得保存检查点的指令后就直接保存，不在需要等到整条业务线的节点都收到指令后才保存。前提条件：设置checkpointConfig.setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE)，设置checkpointConfig.setMaxConcurrentCheckpoints(1)
+        checkpointConfig.enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);  // 当手动取消了当前任务的时候，是否保存之前的检查点（当取消任务时删除检查点（默认），当取消任务时保留检查点
+        checkpointConfig.setTolerableCheckpointFailureNumber(0);    // 该任务执行中允许检查点保存的失败次数，0：一直允许检查点保存失败
 
         SingleOutputStreamOperator<Event> stream = env.addSource(new ClickSource())
                 .assignTimestampsAndWatermarks(WatermarkStrategy.<Event>forBoundedOutOfOrderness(Duration.ZERO)
