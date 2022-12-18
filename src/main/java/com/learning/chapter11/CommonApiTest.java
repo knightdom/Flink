@@ -30,22 +30,22 @@ public class CommonApiTest {
         TableEnvironment tableEnv = TableEnvironment.create(settings);
 
         // 1.2.2 基于老版本planner进行流处理
-        EnvironmentSettings settings1 = EnvironmentSettings.newInstance()
-                .inStreamingMode()
-                .useOldPlanner()
-                .build();
-        TableEnvironment tableEnv1 = TableEnvironment.create(settings1);
-
-        // 1.2.3 基于老版本planner进行批处理（由于老版本时，批流未统一）
-        ExecutionEnvironment batchEnv = ExecutionEnvironment.getExecutionEnvironment();
-        BatchTableEnvironment batchTableEnvironment = BatchTableEnvironment.create(batchEnv);
-
-        // 1.2.4 基于blink版本planner进行批处理
-        EnvironmentSettings settings3 = EnvironmentSettings.newInstance()
-                .inBatchMode()
-                .useBlinkPlanner()
-                .build();
-        TableEnvironment tableEnv3 = TableEnvironment.create(settings3);
+//        EnvironmentSettings settings1 = EnvironmentSettings.newInstance()
+//                .inStreamingMode()
+//                .useOldPlanner()
+//                .build();
+//        TableEnvironment tableEnv1 = TableEnvironment.create(settings1);
+//
+//        // 1.2.3 基于老版本planner进行批处理（由于老版本时，批流未统一）
+//        ExecutionEnvironment batchEnv = ExecutionEnvironment.getExecutionEnvironment();
+//        BatchTableEnvironment batchTableEnvironment = BatchTableEnvironment.create(batchEnv);
+//
+//        // 1.2.4 基于blink版本planner进行批处理
+//        EnvironmentSettings settings3 = EnvironmentSettings.newInstance()
+//                .inBatchMode()
+//                .useBlinkPlanner()
+//                .build();
+//        TableEnvironment tableEnv3 = TableEnvironment.create(settings3);
 
         // 2 创建连接器表
         String createDDL = "CREATE TABLE clickTable (" +
@@ -60,29 +60,43 @@ public class CommonApiTest {
 
         tableEnv.executeSql(createDDL);
 
-        // 创建一张用于输出的表 输出的path只需要填写目录，因为如果有多个并行度，会生成多张表
-        String createOutDDL = "CREATE TABLE outTable (" +
-                " url STRING, " +
-                " `user` STRING " +
-                ") WITH (" +
-                " 'connector' = 'filesystem'," +
-                " 'path' = 'output'," +
-                " 'format' = 'csv'" +
-                ")";
-
-        tableEnv.executeSql(createOutDDL);
-
         // 3 查询
         // 3.1 调用Table API进行表的查询转换
         Table clickTable = tableEnv.from("clickTable");
         Table resultTable = clickTable.where($("user").isEqual("Bob"))
                 .select($("user"), $("url"));
 
-        tableEnv.createTemporaryView("result", resultTable);
+        tableEnv.createTemporaryView("result2", resultTable);
         // 3.2 执行sql进行表的查询转换
-        Table resultTable2 = tableEnv.sqlQuery("select url, user from result");
+        Table resultTable2 = tableEnv.sqlQuery("select url, `user` from result2");
+
+        // 5 行聚合计算的查询转换
+        Table aggResult = tableEnv.sqlQuery("select `user`, COUNT(1) as cnt from clickTable group by `user`");
 
         // 4 输出表
-        resultTable2.executeInsert("outTable");
+        // 4.1 创建一张用于输出的表 输出的path只需要填写目录，因为如果有多个并行度，会生成多张表
+        String createOutDDL = "CREATE TABLE outTable (" +
+                " `user` STRING, " +
+                " url STRING " +
+                ") WITH (" +
+                " 'connector' = 'filesystem'," +
+                " 'path' = 'output'," +
+                " 'format' = 'csv'" +
+                ")";
+        tableEnv.executeSql(createOutDDL);
+
+        // 4.2 创建一张用于控制台打印输出的表
+        String createPrintOutDDL = "CREATE TABLE printOutTable (" +
+                " `user` STRING, " +
+                " cnt BIGINT " +
+                ") WITH (" +
+                " 'onnector' = 'print'" +
+                ")";
+        tableEnv.executeSql(createPrintOutDDL);
+
+        // 输出
+//        resultTable.executeInsert("outTable");
+//        resultTable2.executeInsert("printOutTable");
+        aggResult.executeInsert("printOutTable");
     }
 }
