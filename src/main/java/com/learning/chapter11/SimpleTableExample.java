@@ -49,6 +49,13 @@ public class SimpleTableExample {
         tableEnv.toDataStream(resultTable1).print("result1");
         tableEnv.toDataStream(resultTable2).print("result2");
 
+        // 7 聚合转换
+        tableEnv.createTemporaryView("clickTable", eventTable);
+        Table aggResult = tableEnv.sqlQuery("select user, COUNT(url) as cnt from clickTable group by user");
+
+//        tableEnv.toDataStream(aggResult).print("agg");    // 会报错，因为toDataStream()仅会插入数据，无法更新数据，一般聚合都是需要更新数据
+        tableEnv.toChangelogStream(aggResult).print("agg"); // 更新时，先删除原有的数据再插入新的数据
+
         env.execute();
     }
 }
