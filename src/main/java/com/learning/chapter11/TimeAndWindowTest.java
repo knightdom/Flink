@@ -30,7 +30,7 @@ public class TimeAndWindowTest {
         // 注意TO_TIMESTAMP函数是将字符串类型时间(STRING类型)转换成时间戳(TIMESTAMP类型)，FROM_UNIXTIME函数是将整型时间(INT/BIGINT类型转换成字符串类型时间）
         // 在flink中整型的时间无法直接在watermark中使用，需要通过TO_TIMESTAMP( FROM_UNIXTIME(ts / 1000) )转换
         String createDDL = "CREATE TABLE clickTable (" +
-                " user STRING, " +
+                " `user` STRING, " +
                 " url STRING, " +
                 " ts BIGINT, " +
                 " et AS TO_TIMESTAMP( FROM_UNIXTIME(ts / 1000) ), " +
@@ -40,6 +40,7 @@ public class TimeAndWindowTest {
                 " 'path' = 'input/clicks.txt'," +
                 " 'format' = 'csv'" +
                 ")";
+        tableEnv.executeSql(createDDL);
         
         // 2 在流转换成Table的时候定义时间属性
         SingleOutputStreamOperator<Event> clickStream = env.addSource(new ClickSource())
@@ -53,6 +54,14 @@ public class TimeAndWindowTest {
 
         Table clickTable = tableEnv.fromDataStream(clickStream, $("user"), $("url"), $("timestamp").as("ts"), $("et").rowtime());
 
-        clickTable.printSchema();
+//        clickTable.printSchema();
+
+        // 聚合查询转换
+        // 1 分组聚合 (该sql语句中的clickTable是craeteDDL中的clickTable，下面的那个clickTable是一个table对象，无法直接用于sql语句中)
+        Table aggTable = tableEnv.sqlQuery("select `user`, count(1) from clickTable group by `user`");
+
+        tableEnv.toChangelogStream(aggTable).print("agg");
+
+        env.execute();
     }
 }
