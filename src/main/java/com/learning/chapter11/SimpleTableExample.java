@@ -11,6 +11,8 @@ import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
 import java.time.Duration;
 
+import static org.apache.flink.table.api.Expressions.$;
+
 /**
  * Created by Flink - SimpleTableExample
  *

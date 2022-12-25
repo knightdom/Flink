@@ -8,6 +8,8 @@ import org.apache.flink.table.api.TableEnvironment;
 import org.apache.flink.table.api.bridge.java.BatchTableEnvironment;
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 
+import static org.apache.flink.table.api.Expressions.$;
+
 /**
  * Created by Flink - CommonApiTest
  *
