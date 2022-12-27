@@ -56,11 +56,62 @@ public class TimeAndWindowTest {
 
 //        clickTable.printSchema();
 
-        // 聚合查询转换
-        // 1 分组聚合 (该sql语句中的clickTable是craeteDDL中的clickTable，下面的那个clickTable是一个table对象，无法直接用于sql语句中)
+        // 3 聚合查询转换
+        // 3.1 分组聚合 (该sql语句中的clickTable是craeteDDL中的clickTable，下面的那个clickTable是一个table对象，无法直接用于sql语句中)
         Table aggTable = tableEnv.sqlQuery("select `user`, count(1) from clickTable group by `user`");
 
+        // 3.2 窗口聚合
+        // 3.2.1 滑动窗口
+        Table tumbleWindowResultTable = tableEnv.sqlQuery("select `user`, count(1) as cnt, " +
+                " window_end as endT " +
+                "from TABLE( " +
+                " TUMBLE(TABLE clickTable, DESCRIPTOR(et), INTERVAL '10' SECOND)" +
+                ") " +
+                "GROUP BY `user`, window_end, window_start"
+        );
+        // 3.2.2 滚动窗口
+        Table hopWindowResultTable = tableEnv.sqlQuery("select `user`, count(1) as cnt, " +
+                " window_end as endT " +
+                "from TABLE( " +
+                " HOP(TABLE clickTable, DESCRIPTOR(et), INTERVAL '5' SECOND, INTERVAL '10' SECOND)" +
+                ") " +
+                "GROUP BY `user`, window_end, window_start"
+        );
+        // 3.2.3 累积窗口
+        Table cumulateWindowResultTable = tableEnv.sqlQuery("select `user`, count(1) as cnt, " +
+                " window_end as endT " +
+                "from TABLE( " +
+                " CUMULATE(TABLE clickTable, DESCRIPTOR(et), INTERVAL '10' SECOND)" +
+                ") " +
+                "GROUP BY `user`, window_end, window_start"
+        );
+        // 3.3 开窗聚合 (Over)
+        Table overWindowResultTable = tableEnv.sqlQuery("select `user`, " +
+                " avg(ts) OVER(" +
+                "  PARTITION BY `user` " +
+                "  ORDER BY et " +
+                "  ROWS BETWEEN 3 PRECEDING AND CURRENT ROW" +
+                ") AS avg_ts " +
+                "FROM clickTable"
+        );
+        // 如果有多个聚合统计根据同一个over窗口
+        Table overWindowResultTable1 = tableEnv.sqlQuery("select `user`, " +
+                " avg(ts) OVER w AS avg, " +
+                " MAX(CHAR_LENGTH(url)) OVER w AS max_url" +
+                "FROM clickTable" +
+                "WINDOW w AS (" +
+                " PARTITION BY `user` " +
+                " ORDER BY ts " +
+                " ROWS BETWEEN 3 PRECEDING AND CURRENT ROW" +
+                ")");
+
+
         tableEnv.toChangelogStream(aggTable).print("agg");
+        tableEnv.toDataStream(tumbleWindowResultTable).print("tumble window: ");
+        tableEnv.toDataStream(hopWindowResultTable).print("hop window: ");
+        tableEnv.toDataStream(cumulateWindowResultTable).print("cumulate window: ");
+        tableEnv.toDataStream(overWindowResultTable).print("over window: ");
+        tableEnv.toDataStream(overWindowResultTable1).print("over window1: ");
 
         env.execute();
     }
